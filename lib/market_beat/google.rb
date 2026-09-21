@@ -32,16 +32,24 @@ module MarketBeat
         uri = URI.parse("#{real_time ? REAL_TIME_URL : URL}#{ticker}")
         response = Net::HTTP.get_response(uri)
         response.body
+      rescue StandardError => e
+        raise FetchError, "Failed to fetch Google finance data for #{ticker}: #{e.message}"
       end
 
       def from_xml(xml, metric)
         doc = REXML::Document.new(xml)
-        data = doc.elements["//finance/#{metric}"].attributes['data']
+        elem = doc.elements["//finance/#{metric}"]
+        return nil unless elem && elem.attributes
+        data = elem.attributes['data']
         data.empty? ? nil : data
+      rescue StandardError => e
+        raise ParseError, "Failed to parse Google XML response for metric #{metric}: #{e.message}"
       end
 
       def from_json(json, metric)
         json =~ /"#{metric}"\s*\:\s*"(.+?)"/ ? $1 : nil
+      rescue StandardError => e
+        raise ParseError, "Failed to parse Google JSON response for metric #{metric}: #{e.message}"
       end
     end
   end
