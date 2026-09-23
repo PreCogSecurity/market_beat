@@ -23,6 +23,7 @@ module MarketBeat
         return nil unless csv
 
         quotes = CSV.parse(csv)     # Parse comma-delimited data.
+        return [] unless quotes && quotes.size > 1
         quotes[1..-1].map do |col|  # Skip header line.
           #
           # I guess Google finance folks are tight on data so they return year
@@ -39,6 +40,9 @@ module MarketBeat
             :volume => col[5]
           }
         end
+      rescue StandardError => e
+        raise ParseError, "Failed to parse historical CSV data: #{e.message}" if e.is_a?(CSV::MalformedCSVError) || e.is_a?(ArgumentError)
+        raise
       end
       #
       # Format the URL and fetch stock data.
@@ -47,9 +51,8 @@ module MarketBeat
         uri = URI.parse(URL % [ ticker, start_date.to_s, end_date.to_s ])
         response = Net::HTTP.get_response(uri)
         response.body
-      rescue Exception => e
-        $stderr.puts "market_beat: error fetching quotes\n#{e.inspect}"
-        nil
+      rescue Net::HTTPError, Timeout::Error, SocketError, Errno::ECONNREFUSED, URI::InvalidURIError => e
+        raise FetchError, "Failed to fetch historical quotes for #{ticker}: #{e.message}"
       end
     end
   end

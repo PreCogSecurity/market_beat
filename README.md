@@ -160,6 +160,16 @@ stock data for a given date:
     MarketBeat.trade_timestamp
     MarketBeat.volume
 
+### Architecture & Error Handling ###
+MarketBeat uses a dynamic method proxy (`method_missing`) to route financial indicator requests to provider backends:
+- **`MarketBeat::Google`**: Fetches delayed quotes via XML and real-time quotes via JSON.
+- **`MarketBeat::Yahoo`**: Fetches delayed and real-time quotes via CSV and sanitizes/normalizes numerical values.
+- **`MarketBeat::Historical`**: Fetches historical quotes as CSV data over date ranges.
+
+Robust error handling is built-in with typed exception classes:
+- **`MarketBeat::FetchError`**: Raised when network requests fail (`Net::HTTPError`, `Timeout::Error`, `SocketError`, etc.).
+- **`MarketBeat::ParseError`**: Raised when parsing malformed XML, JSON, or CSV responses (`REXML::ParseException`, `CSV::MalformedCSVError`, etc.).
+
 ### Running Specs ###
 
     $ gem install rspec           # RSpec 2.x is the requirement.

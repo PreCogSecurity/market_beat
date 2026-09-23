@@ -32,4 +32,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_development_dependency "rspec", ">= 2.6.0"
+  s.add_development_dependency "rubocop", "~> 1.0"
+  s.add_development_dependency "bundler-audit"
 end

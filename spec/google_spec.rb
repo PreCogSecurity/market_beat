@@ -165,6 +165,23 @@ describe "MarketBeat::Google Delayed" do
   end
 end
 
+describe "MarketBeat::Google Error Handling" do
+  it "should raise MarketBeat::ParseError on malformed XML" do
+    response = mock(:body => "<invalid>xml<malformed")
+    Net::HTTP.should_receive(:get_response).once.and_return(response)
+    lambda {
+      MarketBeat::Google.average_daily_volume(:ibm)
+    }.should raise_error(MarketBeat::ParseError)
+  end
+
+  it "should raise MarketBeat::FetchError on network error" do
+    Net::HTTP.should_receive(:get_response).once.and_raise(Timeout::Error.new("timeout"))
+    lambda {
+      MarketBeat::Google.average_daily_volume(:ibm)
+    }.should raise_error(MarketBeat::FetchError)
+  end
+end
+
 describe "MarketBeat::Google Real Time" do
   before(:all) do
     @citibank = File.read(File.dirname(__FILE__) + '/fixtures/C.json')

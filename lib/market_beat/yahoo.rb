@@ -25,12 +25,16 @@ module MarketBeat
         uri = URI.parse("#{URL}#{ticker}&f=#{metric}")
         response = Net::HTTP.get_response(uri)
         response.body
+      rescue StandardError => e
+        raise FetchError, "Failed to fetch Yahoo finance data for #{ticker}: #{e.message}"
       end
 
       def sanitize(raw)
         data = raw.strip.gsub(/\r|\n|"|<\/?b>|&nbsp;/, '')
         min, max = data.split(/\s+\-\s+/)
         min && max ? [scrub(min), scrub(max)] : scrub(min)
+      rescue StandardError => e
+        raise ParseError, "Failed to sanitize Yahoo response data: #{e.message}"
       end
 
       def scrub(data)

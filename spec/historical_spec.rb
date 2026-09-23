@@ -50,16 +50,11 @@ describe "MarketBeat::Historical" do
     MarketBeat.quotes(:aapl, "2011-12-21", "2011-12-23").should == []
   end
 
-  it "should return nil on error" do
-    begin
-      stderr, $stderr = $stderr, StringIO.new
-      response = mock(:body => "")
-      Net::HTTP.should_receive(:get_response).once.and_raise(SocketError)
-      MarketBeat.quotes(:aapl, "2011-12-21", "2011-12-23").should == nil
-      $stderr.string.should =~ /^market_beat: error fetching quotes/m
-    ensure
-      $stderr = stderr
-    end
+  it "should raise MarketBeat::FetchError on network error" do
+    Net::HTTP.should_receive(:get_response).once.and_raise(SocketError.new("connection failed"))
+    lambda {
+      MarketBeat.quotes(:aapl, "2011-12-21", "2011-12-23")
+    }.should raise_error(MarketBeat::FetchError)
   end
 end
 
